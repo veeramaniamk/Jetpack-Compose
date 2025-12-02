@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.saveetha.jetpackcompose"
+    namespace = "com.veera.jetpackcompose"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.saveetha.jetpackcompose"
+        applicationId = "com.veera.jetpackcompose"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

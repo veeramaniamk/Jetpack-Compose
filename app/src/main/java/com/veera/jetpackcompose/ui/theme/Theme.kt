@@ -1,4 +1,4 @@
-package com.saveetha.jetpackcompose.ui.theme
+package com.veera.jetpackcompose.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
