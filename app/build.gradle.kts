@@ -50,6 +50,9 @@ dependencies {
     //preview ui tool
     implementation(libs.androidx.compose.ui.tooling.preview)
 
+    //navigation tool
+    implementation(libs.androidx.navigation.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

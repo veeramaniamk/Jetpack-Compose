@@ -13,6 +13,7 @@ composeBom = "2024.09.00"
 kotlin = "2.0.21"
 uiToolingPreview = "1.9.5"
 uiTooling = "1.9.5"
+navigationCompose = "2.9.6"
 
 
 [libraries]
@@ -28,6 +29,7 @@ androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", versi
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "uiToolingPreview" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 
 
 [plugins]
