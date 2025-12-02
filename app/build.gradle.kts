@@ -62,5 +62,7 @@ dependencies {
     //preview ui tool
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    //compose splash screen
+    implementation("androidx.core:core-splashscreen:1.2.0")
 
 }
