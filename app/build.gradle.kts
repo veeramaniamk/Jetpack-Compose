@@ -47,6 +47,9 @@ dependencies {
 
     implementation(libs.appcompat)
     implementation(libs.material)
+    //preview ui tool
+    implementation(libs.androidx.compose.ui.tooling.preview)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
@@ -56,6 +59,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.material3)
+    //preview ui tool
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
 
 }
