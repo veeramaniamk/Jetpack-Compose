@@ -20,18 +20,29 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -50,9 +61,9 @@ fun Login(modifier: Modifier = Modifier) {
 
         // White panel covering bottom half with top rounded corners
         Surface(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.5f) // half of the screen height
+                .fillMaxHeight(0.7f) // half of the screen height
                 .align(Alignment.BottomCenter)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
             color = MaterialTheme.colorScheme.surface // usually white in light theme
@@ -63,42 +74,93 @@ fun Login(modifier: Modifier = Modifier) {
                     .fillMaxSize()
                     .padding(20.dp)
                     .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Example content
-                Text(
-                    text = "Title",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                val popies = FontFamily(
+                    Font(R.font.poppins_medium, FontWeight.Normal),
+                    Font(R.font.poppins_medium, FontWeight.Normal)
                 )
 
-                Text(
-                    text = "Subtitle or description goes here. Put any content you want: lists, images, forms, etc.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Example rows / items
-                for (i in 1..6) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp)
-                            .height(48.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.04f),
-                                shape = RoundedCornerShape(8.dp)
+                Row(
+                    verticalAlignment  = Alignment.CenterVertically,
+                    modifier = modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(10.dp, 0.dp, 0.dp, 0.dp)
+                ) {
+                    Image(
+                        contentDescription = "App Icon",
+                        painter = painterResource(id = R.drawable.thanos_img),
+                        modifier = Modifier.size(25.dp).clip(
+                            CircleShape
+                        ),
+                    )
+                    Text(
+                        text = "SIMATS 360",
+                        fontFamily = popies,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.wrapContentSize()
+                            .padding(
+                                8.dp,
+                                0.dp,
+                                0.dp,
+                                0.dp
                             ),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
-                        Text("List item #$i", modifier = Modifier.padding(start = 12.dp))
-                    }
+                        fontWeight = FontWeight.Bold,
+                    )
+
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = modifier.height(20.dp))
 
-                Button(onClick = { /* handle click */ }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Action")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Login ID",
+                        fontFamily = popies,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.wrapContentSize()
+                            .align(Alignment.Start),
+                                fontWeight = FontWeight.Bold,
+                    )
+
+                    var text by remember { mutableStateOf("") }
+
+                    TextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        singleLine = true,
+                        modifier = modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        placeholder = { Text("Bio ID") }
+                    )
+
+                    Spacer(modifier = modifier.height(20.dp))
+
+                    Text(
+                        text = "Password",
+                        fontFamily = popies,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.wrapContentSize()
+                            .align(Alignment.Start),
+                        fontWeight = FontWeight.Bold,
+                    )
+
+                    var password by remember { mutableStateOf("") }
+
+                    TextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        singleLine = true,
+                        modifier = modifier.fillMaxWidth(),
+                        placeholder = { Text("Password") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    )
+                }
+
+                Spacer(modifier = modifier.height(20.dp))
+
+                Button(onClick = {
+
+                }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Login")
                 }
             }
         }
