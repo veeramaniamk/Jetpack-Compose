@@ -52,12 +52,12 @@ import com.veera.jetpackcompose.R
 @Composable
 fun Login(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-//        Image(
-//            painter = painterResource(id = R.drawable.ic_login_bg),
-//            contentDescription = "Page Background",
-//            modifier = modifier.fillMaxSize(),
-//            contentScale = ContentScale.Crop
-//        )
+        Image(
+            painter = painterResource(id = R.drawable.ic_login_bg),
+            contentDescription = "Page Background",
+            modifier = modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
         // White panel covering bottom half with top rounded corners
         Surface(
