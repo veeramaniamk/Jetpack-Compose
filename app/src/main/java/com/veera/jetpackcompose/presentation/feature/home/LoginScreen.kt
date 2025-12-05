@@ -29,6 +29,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,11 +48,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.veera.jetpackcompose.R
+import com.veera.jetpackcompose.presentation.viewmodel.LoginViewModel
 
-@Preview(showBackground = true)
 @Composable
-fun Login(modifier: Modifier = Modifier) {
+fun Login(modifier: Modifier = Modifier, navController: NavController, viewModel: LoginViewModel) {
+
+    var userId by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
+    val message by viewModel.loginState.collectAsState()
+    val loading by viewModel.isLoading.collectAsState()
+    val success by viewModel.loginSuccess.collectAsState()
+
+    LaunchedEffect(success) {
+        if (success) navController.navigate("home")
+    }
+
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(id = R.drawable.ic_login_bg),
@@ -157,10 +172,17 @@ fun Login(modifier: Modifier = Modifier) {
 
                 Spacer(modifier = modifier.height(20.dp))
 
-                Button(onClick = {
+                Button(
+                    onClick = { viewModel.validateAndLogin(userId, password) },
+                    enabled = !loading,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(if (loading) "Loading..." else "Login")
+                }
 
-                }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Login")
+                if (message.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(message)
                 }
             }
         }
