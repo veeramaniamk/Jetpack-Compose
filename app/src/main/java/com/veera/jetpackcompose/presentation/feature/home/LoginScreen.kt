@@ -48,25 +48,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.veera.jetpackcompose.R
-import com.veera.jetpackcompose.presentation.viewmodel.LoginViewModel
 
 @Composable
-fun Login(modifier: Modifier = Modifier, navController: NavController, viewModel: LoginViewModel) {
+fun Login(modifier: Modifier = Modifier, navController: NavController) {
 
-    var userId by remember { mutableStateOf("") }
+    // Input states
+    var loginId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val message by viewModel.loginState.collectAsState()
-    val loading by viewModel.isLoading.collectAsState()
-    val success by viewModel.loginSuccess.collectAsState()
-
-    LaunchedEffect(success) {
-        if (success) navController.navigate("home")
-    }
+    // Error states
+    var loginIdError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+
+        // Background Image
         Image(
             painter = painterResource(id = R.drawable.ic_login_bg),
             contentDescription = "Page Background",
@@ -74,115 +73,99 @@ fun Login(modifier: Modifier = Modifier, navController: NavController, viewModel
             contentScale = ContentScale.Crop
         )
 
-        // White panel covering bottom half with top rounded corners
         Surface(
             modifier = modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.7f) // half of the screen height
+                .fillMaxHeight(0.7f)
                 .align(Alignment.BottomCenter)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)),
-            color = MaterialTheme.colorScheme.surface // usually white in light theme
+            color = MaterialTheme.colorScheme.surface
         ) {
-            // Content inside the white panel – scrollable if needed
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(20.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                val popies = FontFamily(
-                    Font(R.font.poppins_medium, FontWeight.Normal),
-                    Font(R.font.poppins_medium, FontWeight.Normal)
+
+                // --- Login ID ---
+                Text("Login ID", fontWeight = FontWeight.Bold)
+
+                TextField(
+                    value = loginId,
+                    onValueChange = {
+                        loginId = it
+                        loginIdError = null   // reset error on typing
+                    },
+                    singleLine = true,
+                    isError = loginIdError != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    placeholder = { Text("Bio ID") }
                 )
 
-                Row(
-                    verticalAlignment  = Alignment.CenterVertically,
-                    modifier = modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(10.dp, 0.dp, 0.dp, 0.dp)
-                ) {
-                    Image(
-                        contentDescription = "App Icon",
-                        painter = painterResource(id = R.drawable.thanos_img),
-                        modifier = Modifier.size(25.dp).clip(
-                            CircleShape
-                        ),
-                    )
+                // Show error text
+                if (loginIdError != null) {
                     Text(
-                        text = "SIMATS 360",
-                        fontFamily = popies,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.wrapContentSize()
-                            .padding(
-                                8.dp,
-                                0.dp,
-                                0.dp,
-                                0.dp
-                            ),
-                        fontWeight = FontWeight.Bold,
-                    )
-
-                }
-
-                Spacer(modifier = modifier.height(20.dp))
-
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = "Login ID",
-                        fontFamily = popies,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.wrapContentSize()
-                            .align(Alignment.Start),
-                                fontWeight = FontWeight.Bold,
-                    )
-
-                    var text by remember { mutableStateOf("") }
-
-                    TextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        singleLine = true,
-                        modifier = modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        placeholder = { Text("Bio ID") }
-                    )
-
-                    Spacer(modifier = modifier.height(20.dp))
-
-                    Text(
-                        text = "Password",
-                        fontFamily = popies,
-                        textAlign = TextAlign.Start,
-                        modifier = Modifier.wrapContentSize()
-                            .align(Alignment.Start),
-                        fontWeight = FontWeight.Bold,
-                    )
-
-                    var password by remember { mutableStateOf("") }
-
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        singleLine = true,
-                        modifier = modifier.fillMaxWidth(),
-                        placeholder = { Text("Password") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        text = loginIdError!!,
+                        color = Color.Red,
+                        fontSize = 12.sp
                     )
                 }
 
-                Spacer(modifier = modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
+                // --- Password ---
+                Text("Password", fontWeight = FontWeight.Bold)
+
+                TextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        passwordError = null
+                    },
+                    singleLine = true,
+                    isError = passwordError != null,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Password") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                )
+
+                // Show error text
+                if (passwordError != null) {
+                    Text(
+                        text = passwordError!!,
+                        color = Color.Red,
+                        fontSize = 12.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // --- Login Button ---
                 Button(
-                    onClick = { viewModel.validateAndLogin(userId, password) },
-                    enabled = !loading,
+                    onClick = {
+                        // Validate
+                        var valid = true
+
+                        if (loginId.isBlank()) {
+                            loginIdError = "Login ID cannot be empty"
+                            valid = false
+                        }
+
+                        if (password.isBlank()) {
+                            passwordError = "Password cannot be empty"
+                            valid = false
+                        }
+
+                        if (valid) {
+                            // TODO: Call API or Navigate
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(if (loading) "Loading..." else "Login")
-                }
-
-                if (message.isNotEmpty()) {
-                    Spacer(Modifier.height(10.dp))
-                    Text(message)
+                    Text("Login")
                 }
             }
         }

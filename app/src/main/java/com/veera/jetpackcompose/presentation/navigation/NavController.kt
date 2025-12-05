@@ -8,10 +8,9 @@ import androidx.navigation.compose.composable
 import com.veera.jetpackcompose.presentation.feature.home.HomePage
 import com.veera.jetpackcompose.presentation.feature.home.Login
 import com.veera.jetpackcompose.presentation.feature.home.SplashScreen
-import com.veera.jetpackcompose.presentation.viewmodel.LoginViewModel
 
 @Composable
-fun AppNavGraph(navController: NavHostController, loginViewModel: LoginViewModel) {
+fun AppNavGraph(navController: NavHostController, /*loginViewModel: LoginViewModel*/) {
 
     NavHost(
         navController = navController,
@@ -23,7 +22,7 @@ fun AppNavGraph(navController: NavHostController, loginViewModel: LoginViewModel
         }
 
         composable("login") {
-            Login(navController = navController, viewModel = loginViewModel)
+            Login(navController = navController, /*viewModel = loginViewModel*/)
         }
 
         composable("home") {

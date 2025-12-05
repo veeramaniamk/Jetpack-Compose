@@ -8,7 +8,6 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.veera.jetpackcompose.presentation.feature.home.Login
 import com.veera.jetpackcompose.presentation.navigation.AppNavGraph
-import com.veera.jetpackcompose.presentation.viewmodel.LoginViewModel
 
 class MainActivity: ComponentActivity() {
 
@@ -20,11 +19,11 @@ class MainActivity: ComponentActivity() {
 
         enableEdgeToEdge()
 
-        val vm = LoginViewModel()
+//        val vm = LoginViewModel()
 
         setContent {
             val navController = rememberNavController()
-            AppNavGraph(navController, vm)
+            AppNavGraph(navController, /*vm*/)
         }
 
     }
