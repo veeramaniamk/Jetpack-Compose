@@ -196,7 +196,24 @@ fun Login(modifier: Modifier = Modifier, navController: NavController) {
 
                         try {
                             val response = ApiClient.api.login(loginId.toInt(), password)
-                            loginSuccess = true     // 🌟 success
+                            if(response.isSuccessful) {
+                                // HTTP 200
+                                val body = response.body()
+                                val status = body?.get("status") as? Int
+                                val message = body?.get("message") as? String
+
+                                if (status == 200) {
+                                    loginSuccess = true
+                                } else {
+                                    loginError = message ?: "Something went wrong"
+                                }
+
+                            } else {
+                                // HTTP 400, 401, 500 ... (no exception thrown now)
+                                val errorJson = response.errorBody()?.string()
+
+                                loginError = errorJson ?: "HTTP error ${response.code()}"
+                            }
                         } catch (e: Exception) {
                             loginError = e.message  // ❌ show error
                         }
