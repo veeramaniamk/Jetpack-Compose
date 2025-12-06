@@ -1,6 +1,7 @@
 package com.veera.jetpackcompose.presentation.feature.home
 
 import android.provider.CalendarContract
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -40,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -51,10 +53,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.veera.jetpackcompose.R
+import com.veera.jetpackcompose.client.ApiClient
 
 @Composable
 fun Login(modifier: Modifier = Modifier, navController: NavController) {
 
+    val context = LocalContext.current
     // Input states
     var loginId by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -62,6 +66,12 @@ fun Login(modifier: Modifier = Modifier, navController: NavController) {
     // Error states
     var loginIdError by remember { mutableStateOf<String?>(null) }
     var passwordError by remember { mutableStateOf<String?>(null) }
+
+    var isLoading by remember { mutableStateOf(false) }
+    var loginSuccess by remember { mutableStateOf(false) }
+    var loginError by remember { mutableStateOf<String?>(null) }
+
+    var triggerLogin by remember { mutableStateOf(false) }
 
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
@@ -160,13 +170,42 @@ fun Login(modifier: Modifier = Modifier, navController: NavController) {
                         }
 
                         if (valid) {
-                            // TODO: Call API or Navigate
+                            triggerLogin = true
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Login")
+                    if (isLoading) {
+                        Text("Logging in...")
+                    }
+
+                    if (loginError != null) {
+                        Text("Error: $loginError", color = Color.Red)
+                    }
+
+                    if (loginSuccess) {
+                        Text("Login Successful")
+                        // navController.navigate("home")
+                    }
                 }
+
+                LaunchedEffect(triggerLogin) {
+                    if (triggerLogin) {
+                        isLoading = true
+
+                        try {
+                            val response = ApiClient.api.login(loginId.toInt(), password)
+                            loginSuccess = true     // 🌟 success
+                        } catch (e: Exception) {
+                            loginError = e.message  // ❌ show error
+                        }
+
+                        isLoading = false
+                        triggerLogin = false // reset
+                    }
+                }
+
             }
         }
     }
