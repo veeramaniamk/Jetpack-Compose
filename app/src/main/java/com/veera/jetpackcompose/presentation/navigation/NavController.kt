@@ -14,7 +14,7 @@ fun AppNavGraph(navController: NavHostController, /*loginViewModel: LoginViewMod
 
     NavHost(
         navController = navController,
-        startDestination = "splash"
+        startDestination = "home"
     ) {
 
         composable("splash") {
