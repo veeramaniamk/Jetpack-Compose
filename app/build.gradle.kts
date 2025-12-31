@@ -54,6 +54,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material3)
 
+    //material icons
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+
     //view model
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
 

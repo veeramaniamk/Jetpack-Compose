@@ -26,7 +26,7 @@ fun AppNavGraph(navController: NavHostController, /*loginViewModel: LoginViewMod
         }
 
         composable("home") {
-            HomePage()
+            HomePage(navController = navController)
         }
     }
 }
