@@ -101,38 +101,7 @@ fun HomePage(
 }
 
 
-/* drag working code similar
-* .offset {
-                            IntOffset(
-                                (animatedOffset.value + dragOffset).roundToInt(),
-                                0
-                            )
-                        }
-                        .draggable(
-                            orientation = Orientation.Horizontal,
-                            state = rememberDraggableState { delta ->
-                                dragOffset += delta
-                                dragging = true
-
-                                val pillCenter = animatedOffset.value + dragOffset + pillWidthPx / 2f
-
-                                val nearestIndex = itemCenters
-                                    .mapIndexed { i, c -> i to kotlin.math.abs(c - pillCenter) }
-                                    .minByOrNull { it.second }
-                                    ?.first ?: return@rememberDraggableState
-
-                                if (nearestIndex != selectedIndex) selectedIndex = nearestIndex
-
-                            },
-                            onDragStopped = {
-                                dragging = false
-                                dragOffset = 0f
-                            }
-                        )
-* */
-
-
-@Preview(showBackground = true, device = "spec:width=340dp,height=850.9dp,dpi=440")
+@Preview(showBackground = true, device = "spec:width=320dp,height=850.9dp,dpi=440")
 @UiComposable
 @Composable
 fun CustomBottomBarTest() {
@@ -143,7 +112,6 @@ fun CustomBottomBarTest() {
         BottomItem("splash", "Reports", Icons.Default.List),
         BottomItem("home", "Settings", Icons.Default.Settings)
     )
-    val interactionSource = remember { MutableInteractionSource() }
 
     val itemCenters = remember { mutableStateListOf<Float>() }
     var selectedIndex by remember { mutableIntStateOf(0) }
@@ -156,9 +124,7 @@ fun CustomBottomBarTest() {
             (center - pillWidthPx / 2f).toDp()
         }
     } ?: 0.dp
-    Log.d("pillWidth", "base offset $baseOffset pillwidth $pillWidthPx ")
     var animatedOffset = remember { Animatable(0f) }
-    var initialSet by remember { mutableStateOf(false) }
     var previousIndex by remember { mutableStateOf(selectedIndex) }
     var dragOffset by remember { mutableStateOf(0f) }
 
@@ -192,13 +158,7 @@ fun CustomBottomBarTest() {
         dragOffset = 0f
     }
 
-    BoxWithConstraints {
-        val padd = when {
-            maxWidth >= 420.dp -> 28.dp
-            maxWidth >= 380.dp -> 24.dp
-            maxWidth >= 340.dp -> 20.dp
-            else -> 16.dp
-        }
+//    BoxWithConstraints {
 
         val shape = RoundedCornerShape(24.dp)
         Surface(
@@ -219,12 +179,50 @@ fun CustomBottomBarTest() {
         )
         {
 
+            val scope = rememberCoroutineScope()
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(70.dp)
                     .clip(shape)
                     .background(Color.White)
+                    .pointerInput(Unit) {
+                        awaitEachGesture {
+
+                            // 1️⃣ Wait for touch down
+                            val down = awaitFirstDown()
+
+                            val touchX = down.position.x
+
+                            // 2️⃣ Find nearest item center
+                            val nearestIndex = itemCenters
+                                .mapIndexed { index, center ->
+                                    index to kotlin.math.abs(center - touchX)
+                                }
+                                .minByOrNull { it.second }
+                                ?.first
+
+                            // 3️⃣ If touch is reasonably close, select
+                            if (nearestIndex != null) {
+                                selectedIndex = nearestIndex
+
+                                // Optional: animate pill immediately
+                                scope.launch {
+                                    val target =
+                                        itemCenters[nearestIndex] - pillWidthPx / 2f
+
+                                    animatedOffset.animateTo(
+                                        target,
+                                        animationSpec = tween(
+                                            durationMillis = 220,
+                                            easing = LinearOutSlowInEasing
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
             )
             {
 
@@ -243,12 +241,17 @@ fun CustomBottomBarTest() {
                         stiffness = Spring.StiffnessLow
                     )
                 )
-                val scope = rememberCoroutineScope()
 
                 fun targetOffsetFor(index: Int): Float {
                     val center = itemCenters.getOrNull(index) ?: return animatedOffset.value
                     return center - pillWidthPx / 2f
                 }
+
+                val minOffsetPx =
+                    itemCenters.firstOrNull()?.minus(pillWidthPx / 2f) ?: 0f
+
+                val maxOffsetPx =
+                    itemCenters.lastOrNull()?.minus(pillWidthPx / 2f) ?: 0f
 
                 Surface(
                     modifier = Modifier
@@ -268,11 +271,28 @@ fun CustomBottomBarTest() {
                                     // amplify slightly for lighter feel
 //                                    dragOffset += dragAmount * 0.6f
                                     // 1️⃣ STOP animation & move pill directly
+                                    val resistanceZone = 40f // px, how far it can stretch
+
+                                    val newOffset = animatedOffset.value + dragAmount * 1.3f
+                                    val clampedOffset = when {
+                                        newOffset < minOffsetPx ->
+                                            minOffsetPx - (minOffsetPx - newOffset).coerceAtMost(resistanceZone) * 0.3f
+
+                                        newOffset > maxOffsetPx ->
+                                            maxOffsetPx + (newOffset - maxOffsetPx).coerceAtMost(resistanceZone) * 0.3f
+
+                                        else -> newOffset
+                                    }
+
                                     scope.launch {
+                                        animatedOffset.snapTo(clampedOffset)
+                                    }
+
+                                    /*scope.launch {
                                         animatedOffset.snapTo(
                                             animatedOffset.value + dragAmount * 1.3f
                                         )
-                                    }
+                                    }*/
 
                                     // 2️⃣ Find pill center
                                     val pillCenter =
@@ -359,38 +379,8 @@ fun CustomBottomBarTest() {
                                         itemCenters[index] = center
                                     else
                                         itemCenters.add(center)
-                                    Log.d("positionInParent", "position $index " +"x-"+x +" width - " +width+" center - " + center)
-                                }.pointerInput(Unit) {
-                                    awaitEachGesture {
-                                        val down = awaitFirstDown()
-
-                                        var dragDistance = 0f
-                                        val touchSlop = viewConfiguration.touchSlop
-
-                                        var isDrag = false
-
-                                        while (true) {
-                                            val event = awaitPointerEvent()
-                                            val change = event.changes.first()
-
-                                            if (!change.pressed) break
-
-                                            val deltaX = change.position.x
-                                            dragDistance += kotlin.math.abs(deltaX)
-
-                                            if (dragDistance > touchSlop) {
-                                                isDrag = true
-                                                break
-                                            }
-                                        }
-
-                                        if (!isDrag) {
-                                            // ✅ TAP → CLICK
-                                            selectedIndex = index
-                                        }
-                                        // else → drag is handled by parent overlay
-                                    }
-                                },
+                                }
+                            ,
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         )
@@ -411,245 +401,5 @@ fun CustomBottomBarTest() {
                 }
             }
         }
-    }
-}
-
-@SuppressLint("UnusedBoxWithConstraintsScope")
-@Composable
-fun CustomBottomBar(navController: NavController) {
-
-    val items = listOf(
-        BottomItem("home", "Home", Icons.Default.Home),
-        BottomItem("login", "Notification", Icons.Default.Notifications),
-        BottomItem("splash", "Reports", Icons.Default.List),
-        BottomItem("home", "Settings", Icons.Default.Settings)
-    )
-
-    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-    var selectedIndex by remember { mutableIntStateOf(0) }
-
-    val itemCenters = remember { mutableStateListOf<Float>() }
-
-    val density = LocalDensity.current
-    val pillWidthPx = with(density) { 60.dp.toPx() }
-
-    // Normal target position (center - width/2)
-    val baseOffset = itemCenters.getOrNull(selectedIndex)?.let { center ->
-        with(density) { (center - pillWidthPx / 2f).toDp() }
-    } ?: 0.dp
-
-    // -----------------------------
-    // OVERSHOOT SLIDE STATE
-    // -----------------------------
-    val animatedOffset = remember { Animatable(baseOffset.value) }
-    var initialSet by remember { mutableStateOf(false) }
-    var previousIndex by remember { mutableStateOf(selectedIndex) }
-
-    LaunchedEffect(itemCenters) {
-        val center = itemCenters.getOrNull(selectedIndex) ?: return@LaunchedEffect
-        if (!initialSet) {
-            val target = with(density) { (center - pillWidthPx / 2f).toDp().value }
-            animatedOffset.snapTo(target)
-            initialSet = true
-        }
-    }
-
-    // Trigger overshoot animation when tab changes
-    LaunchedEffect(selectedIndex, baseOffset) {
-
-        val direction = when {
-            selectedIndex > previousIndex -> 1f   // RIGHT
-            selectedIndex < previousIndex -> -1f  // LEFT
-            else -> 0f
-        }
-
-        previousIndex = selectedIndex
-
-        if (direction == 0f) return@LaunchedEffect
-
-        val overshootPx = with(density) { 4.dp.toPx() } * direction
-
-        // -------------- ANIMATION ---------------
-        animatedOffset.animateTo(
-            // step 1: overshoot beyond target
-            targetValue = baseOffset.value + with(density) { overshootPx.toDp().value },
-            animationSpec = tween(
-                durationMillis = 220,
-                easing = LinearOutSlowInEasing
-            )
-        )
-
-        animatedOffset.animateTo(
-            // step 2: return & settle exactly at target
-            targetValue = baseOffset.value,
-            animationSpec = tween(
-                durationMillis = 180,
-                easing = LinearOutSlowInEasing
-            )
-        )
-    }
-
-    val interactionSource = remember { MutableInteractionSource() }
-
-    BoxWithConstraints {
-        Log.d("positionInParent", "maxwidth $maxWidth")
-        val padd = responsivePadding(maxWidth)
-
-        Surface(
-            modifier = Modifier
-                .wrapContentSize()
-                .background(Color.Transparent)
-                .padding(
-                    start = 30.dp,
-                    end = 30.dp,
-                    bottom = WindowInsets.navigationBars
-                        .asPaddingValues()
-                        .calculateBottomPadding() + 16.dp
-                ),
-            shape = RoundedCornerShape(24.dp),
-            shadowElevation = 2.dp,
-            tonalElevation = 6.dp,
-            color = Color.White
-        )
-        {
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(70.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-            )
-            {
-
-                var dragOffset  by remember { mutableStateOf(0f) }
-                Log.d("dragOffset", "$dragOffset")
-                // --------------------------
-                // SMOOTH OVERSHOOT PILL
-                // --------------------------
-
-                Surface(
-                    modifier = Modifier
-                        .padding(start = 8.dp, end = 8.dp, top = 14.dp, bottom = 12.dp)
-                        .width(60.dp)
-//                        .height(75.dp)
-//                        .offset(x = animatedOffset.value.dp)
-                        .offset {
-                            IntOffset(
-                                (animatedOffset.value + dragOffset).roundToInt(),
-                                0
-                            )
-                        }
-                        .draggable(
-                            orientation = Orientation.Horizontal,
-                            state = rememberDraggableState { delta ->
-                                dragOffset += delta
-
-                                val pillCenter =
-                                    animatedOffset.value + dragOffset + pillWidthPx / 2f
-
-                                val nearestIndex = itemCenters
-                                    .mapIndexed { index, center ->
-                                        index to kotlin.math.abs(center - pillCenter)
-                                    }
-                                    .minByOrNull { it.second }
-                                    ?.first ?: return@rememberDraggableState
-
-                                if (nearestIndex != selectedIndex) {
-                                    selectedIndex = nearestIndex
-                                }
-                            },
-                            onDragStopped = {
-                                dragOffset = 0f
-                            }
-                        )
-                        .fillMaxHeight(),
-                    shape = RoundedCornerShape(16.dp),
-                    shadowElevation = 2.dp,      // <-- elevation
-                    tonalElevation = 6.dp,
-                    color = Color(0xFF00BCD4)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    )
-                }
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    items.forEachIndexed { index, item ->
-
-                        val targetScale = if (index == selectedIndex) 1.18f else 1f
-
-                        val scale by animateFloatAsState(
-                            targetValue = targetScale,
-                            animationSpec = spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
-
-                        val animatedTint by animateColorAsState(
-                            targetValue = if (index == selectedIndex) Color.White else Color.Gray,
-                            animationSpec = tween(durationMillis = 350)
-                        )
-
-                        Column(
-                            modifier = Modifier
-                                .padding(horizontal = padd)
-                                .onGloballyPositioned { coords ->
-                                    val x = coords.positionInParent().x
-                                    val width = coords.size.width
-                                    val center = x + width / 2f
-
-                                    if (itemCenters.size > index)
-                                        itemCenters[index] = center
-                                    else
-                                        itemCenters.add(center)
-
-                                    Log.d("positionInParent", "position $index " +"x-"+x +" width - " +width+" center - " + center)
-                                }
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) {
-                                   /* navController.navigate(item.route) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }*/
-                                    selectedIndex = index
-                                },
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.title,
-                                tint = animatedTint,
-                                modifier = Modifier
-                                    .size(25.dp)
-                                    .graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                    }
-                            )
-                        }
-                    }
-
-//                    itemCenters.forEach { value ->
-//                        Log.d("positionInParent", "center values "+ value)
-//                    }
-                }
-            }
-        }
-    }
+//    }
 }
